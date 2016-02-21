@@ -1626,7 +1626,7 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
             // TODO - Assume a player with expansion 0 travels from BootyBay to Ratched, and he is attempted to be teleported to outlands
             //        then he will repop near BootyBay instead of normally continuing his journey
             // This code is probably added to catch passengers on ships to northrend who shouldn't go there
-            if (lockStatus == AREA_LOCKSTATUS_INSUFFICIENT_EXPANSION && !assignedAreaTrigger && GetTransport())
+            if (lockStatus == AREA_LOCKSTATUS_EXPANSION_NOT_ALLOWED && !assignedAreaTrigger && GetTransport())
                 RepopAtGraveyard();                         // Teleport to near graveyard if on transport, looks blizz like :)
 
             SendTransferAbortedByLockStatus(mEntry, lockStatus, miscRequirement);
@@ -2996,7 +2996,7 @@ bool Player::addSpell(uint32 spell_id, bool active, bool learning, bool dependen
                 if (lowerRank->state == PLAYERSPELL_REMOVED || !lowerRank->active)
                     continue;
 
-                SpellEntry const *spell_old = sSpellStore.LookupEntry(prev_spell_id); 
+                SpellEntry const *spell_old = sSpellStore.LookupEntry(prev_spell_id);
                 SpellEntry const *spell_new = spellInfo;
 
                 if (sSpellMgr.IsRankedSpellNonStackableInSpellBook(spell_old))
@@ -3898,7 +3898,7 @@ void Player::DeleteFromDB(ObjectGuid playerguid, uint32 accountId, bool updateRe
     CharacterDatabase.PExecute("DELETE FROM character_ticket "
                                "WHERE resolved = 0 AND guid = %u",
                                playerguid.GetCounter());
-    
+
     // for nonexistent account avoid update realm
     if (accountId == 0)
         { updateRealmChars = false; }
@@ -6761,7 +6761,7 @@ void Player::DuelComplete(DuelCompleteType type)
     if (GameObject* obj = GetMap()->GetGameObject(GetGuidValue(PLAYER_DUEL_ARBITER)))
         duel->initiator->RemoveGameObject(obj, true);
 
-    /* remove auras */ 
+    /* remove auras */
     // TODO: Needs a simpler method
     std::vector<uint32> auras2remove;
     SpellAuraHolderMap const& vAuras = duel->opponent->GetSpellAuraHolderMap();
@@ -9777,8 +9777,8 @@ InventoryResult Player::CanEquipItem(uint8 slot, uint16& dest, Item* pItem, bool
                 if (IsNonMeleeSpellCasted(false))
                     { return EQUIP_ERR_CANT_DO_RIGHT_NOW; }
 
-                // prevent equip item in Spirit of Redemption (Aura: 27827)  
-                if (HasAuraType(SPELL_AURA_SPIRIT_OF_REDEMPTION))  
+                // prevent equip item in Spirit of Redemption (Aura: 27827)
+                if (HasAuraType(SPELL_AURA_SPIRIT_OF_REDEMPTION))
                     { return EQUIP_ERR_CANT_DO_RIGHT_NOW; }
             }
 
@@ -15136,7 +15136,7 @@ bool Player::isAllowedToLoot(Creature* creature)
                     /* If the assigned looter's GUID is equal to ours */
                     else if (creature->assignedLooter == GetGUIDLow())
                         { return true; }
-                    /* If the creature already has an assigned looter and that looter isn't us */                    
+                    /* If the creature already has an assigned looter and that looter isn't us */
                     else if (creature->assignedLooter != 0 && !hasSharedLoot && !hasStartingQuestLoot)
                         { return false; }
 
@@ -15144,10 +15144,10 @@ bool Player::isAllowedToLoot(Creature* creature)
 
                     /* This is the player that will be given permission to loot */
                     Player* final_looter = recipient;
-                    
+
                     /* Iterate through the valid party members */
                     Group::MemberSlotList slots = plr_group->GetMemberSlots();
-                    
+
                     for (Group::MemberSlotList::iterator itr = slots.begin(); itr != slots.end(); ++itr)
                     {
                         /* Get the player data */
@@ -15170,18 +15170,18 @@ bool Player::isAllowedToLoot(Creature* creature)
 
                     /* We have our looter, update their loot time */
                     final_looter->lastTimeLooted = time(NULL);
-                    
+
                     /* Update the creature with the looter that has been assigned to them */
                     creature->assignedLooter = final_looter->GetGUIDLow();
                     final_looter->GetGroup()->SetLooterGuid(final_looter->GetGUID());
-                    
+
                     /* Finally, return if we are the assigned looter */
                     return (final_looter->GetGUIDLow() == GetGUIDLow() || hasSharedLoot || hasStartingQuestLoot);
                     /* End of switch statement */
                 }
                 default:
                     // Something went wrong, avoid crash
-                    
+
                     return false;
             }
         }
@@ -15493,7 +15493,7 @@ void Player::_LoadInventory(QueryResult* result, uint32 timediff)
             std::string content = GetSession()->GetMangosString(LANG_NOT_EQUIPPED_ITEM);
             // fill mail
             MailDraft draft(subject);
-            draft.SetSubjectAndBody(subject,content); 
+            draft.SetSubjectAndBody(subject,content);
             for (int i = 0; !problematicItems.empty() && i < MAX_MAIL_ITEMS; ++i)
             {
                 Item* item = problematicItems.front();
@@ -17214,24 +17214,24 @@ void Player::TextEmote(const std::string& text)
     SendMessageToSetInRange(&data, sWorld.getConfig(CONFIG_FLOAT_LISTEN_RANGE_TEXTEMOTE), true, !sWorld.getConfig(CONFIG_BOOL_ALLOW_TWO_SIDE_INTERACTION_CHAT));
 }
 
-void Player::LogWhisper(const std::string& text, ObjectGuid receiver) 
+void Player::LogWhisper(const std::string& text, ObjectGuid receiver)
 {
     WhisperLoggingLevels loggingLevel = WhisperLoggingLevels(sWorld.getConfig(CONFIG_UINT32_LOG_WHISPERS));
 
     if (loggingLevel == WHISPER_LOGGING_NONE)
         return;
-    
+
     //Try to find ticket by either this player or the receiver
     GMTicket* ticket = sTicketMgr.GetGMTicket(GetObjectGuid());
     if (!ticket)
         ticket = sTicketMgr.GetGMTicket(receiver);
-    
+
     uint32 ticketId = 0;
     if (ticket)
         ticketId = ticket->GetId();
-    
+
     bool isSomeoneGM = false;
-    
+
     //Find out if at least one of them is a GM for ticket logging
     if (GetSession()->GetSecurity() >= SEC_GAMEMASTER)
         isSomeoneGM = true;
@@ -17241,7 +17241,7 @@ void Player::LogWhisper(const std::string& text, ObjectGuid receiver)
         if (pRecvPlayer && pRecvPlayer->GetSession()->GetSecurity() >= SEC_GAMEMASTER)
             isSomeoneGM = true;
     }
-    
+
     if ((loggingLevel == WHISPER_LOGGING_TICKETS && ticket && isSomeoneGM)
         || loggingLevel == WHISPER_LOGGING_EVERYTHING)
     {
@@ -19081,14 +19081,26 @@ void Player::SendTransferAbortedByLockStatus(MapEntry const* mapEntry, AreaLockS
 
     switch (lockStatus)
     {
-        case AREA_LOCKSTATUS_TOO_LOW_LEVEL:
+        case AREA_LOCKSTATUS_LEVEL_TOO_LOW:
             GetSession()->SendAreaTriggerMessage(GetSession()->GetMangosString(LANG_LEVEL_MINREQUIRED), miscRequirement);
+            break;
+        case AREA_LOCKSTATUS_LEVEL_TOO_HIGH:
+            GetSession()->SendAreaTriggerMessage(GetSession()->GetMangosString(LANG_LEVEL_MAXREQUIRED), miscRequirement);
+            break;
+        case AREA_LOCKSTATUS_LEVEL_NOT_EQUAL:
+            GetSession()->SendAreaTriggerMessage(GetSession()->GetMangosString(LANG_LEVEL_EQUALREQUIRED), miscRequirement);
             break;
         case AREA_LOCKSTATUS_ZONE_IN_COMBAT:
             GetSession()->SendTransferAborted(mapEntry->MapID, TRANSFER_ABORT_ZONE_IN_COMBAT);
             break;
         case AREA_LOCKSTATUS_INSTANCE_IS_FULL:
             GetSession()->SendTransferAborted(mapEntry->MapID, TRANSFER_ABORT_MAX_PLAYERS);
+            break;
+        case AREA_LOCKSTATUS_WRONG_TEAM:
+            if (miscRequirement == 469)
+                GetSession()->SendAreaTriggerMessage("%s", GetSession()->GetMangosString(LANG_WRONG_TEAM_ALLIANCE));
+            else
+                GetSession()->SendAreaTriggerMessage("%s", GetSession()->GetMangosString(LANG_WRONG_TEAM_HORDE));
             break;
         case AREA_LOCKSTATUS_QUEST_NOT_COMPLETED:
             if (mapEntry->MapID == 269)                     // Exception for Black Morass
@@ -19103,15 +19115,16 @@ void Player::SendTransferAbortedByLockStatus(MapEntry const* mapEntry, AreaLockS
             }
             // No break here!
         case AREA_LOCKSTATUS_MISSING_ITEM:
-            GetSession()->SendTransferAborted(mapEntry->MapID, TRANSFER_ABORT_DIFFICULTY, GetDifficulty());
+            if (AreaTrigger const* at = sObjectMgr.GetMapEntranceTrigger(mapEntry->MapID))
+                { GetSession()->SendAreaTriggerMessage(GetSession()->GetMangosString(LANG_REQUIRED_ITEM), sObjectMgr.GetItemPrototype(miscRequirement)->Name1); }
             break;
-        case AREA_LOCKSTATUS_MISSING_DIFFICULTY:
+        case AREA_LOCKSTATUS_DIFFICULTY_MISSING:
         {
             Difficulty difficulty = GetDifficulty();
             GetSession()->SendTransferAborted(mapEntry->MapID, TRANSFER_ABORT_DIFFICULTY, difficulty);
             break;
         }
-        case AREA_LOCKSTATUS_INSUFFICIENT_EXPANSION:
+        case AREA_LOCKSTATUS_EXPANSION_NOT_ALLOWED:
             GetSession()->SendTransferAborted(mapEntry->MapID, TRANSFER_ABORT_INSUF_EXPAN_LVL, miscRequirement);
             break;
         case AREA_LOCKSTATUS_NOT_ALLOWED:
@@ -20976,13 +20989,13 @@ AreaLockStatus Player::GetAreaTriggerLockStatus(AreaTrigger const* at, uint32& m
 
     // Heroic allowed only on TBC instances
     if (!isRegularTargetMap && mapEntry->IsDungeon() && mapEntry->Expansion() != 1)
-        return AREA_LOCKSTATUS_MISSING_DIFFICULTY;
+        return AREA_LOCKSTATUS_DIFFICULTY_MISSING;
 
     // Expansion requirement
     if (GetSession()->Expansion() < mapEntry->Expansion())
     {
         miscRequirement = mapEntry->Expansion();
-        return AREA_LOCKSTATUS_INSUFFICIENT_EXPANSION;
+        return AREA_LOCKSTATUS_EXPANSION_NOT_ALLOWED;
     }
 
     // Gamemaster can always enter
@@ -20990,15 +21003,15 @@ AreaLockStatus Player::GetAreaTriggerLockStatus(AreaTrigger const* at, uint32& m
         { return AREA_LOCKSTATUS_OK; }
 
     // Level Requirements
-    if (getLevel() < at->requiredLevel && !sWorld.getConfig(CONFIG_BOOL_INSTANCE_IGNORE_LEVEL))
+    if (getLevel() < at->condition && !sWorld.getConfig(CONFIG_BOOL_INSTANCE_IGNORE_LEVEL))
     {
-        miscRequirement = at->requiredLevel;
-        return AREA_LOCKSTATUS_TOO_LOW_LEVEL;
+        miscRequirement = at->condition;
+        return AREA_LOCKSTATUS_LEVEL_TOO_LOW;
     }
     if (!isRegularTargetMap && !sWorld.getConfig(CONFIG_BOOL_INSTANCE_IGNORE_LEVEL) && getLevel() < uint32(maxLevelForExpansion[mapEntry->Expansion()]))
     {
         miscRequirement = maxLevelForExpansion[mapEntry->Expansion()];
-        return AREA_LOCKSTATUS_TOO_LOW_LEVEL;
+        return AREA_LOCKSTATUS_LEVEL_TOO_LOW;
     }
 
     // Raid Requirements
@@ -21006,46 +21019,57 @@ AreaLockStatus Player::GetAreaTriggerLockStatus(AreaTrigger const* at, uint32& m
         if (!GetGroup() || !GetGroup()->isRaidGroup())
             { return AREA_LOCKSTATUS_RAID_LOCKED; }
 
-    // Item Requirements: must have requiredItem OR requiredItem2, report the first one that's missing
-    if (at->requiredItem)
+    if (at->condition) //condition validity is checked at startup
     {
-        if (!HasItemCount(at->requiredItem, 1) &&
-            (!at->requiredItem2 || !HasItemCount(at->requiredItem2, 1)))
+        ConditionEntry fault;
+        if (!sObjectMgr.IsPlayerMeetToCondition(at->condition, this, GetMap(),NULL, CONDITION_AREA_TRIGGER, &fault))
         {
-            miscRequirement = at->requiredItem;
-            return AREA_LOCKSTATUS_MISSING_ITEM;
-        }
-    }
-    else if (at->requiredItem2 && !HasItemCount(at->requiredItem2, 1))
-    {
-        miscRequirement = at->requiredItem2;
-        return AREA_LOCKSTATUS_MISSING_ITEM;
-    }
-    // Heroic item requirements
-    if (!isRegularTargetMap && at->heroicKey)
-    {
-        if (!HasItemCount(at->heroicKey, 1) && (!at->heroicKey2 || !HasItemCount(at->heroicKey2, 1)))
-        {
-            miscRequirement = at->heroicKey;
-            return AREA_LOCKSTATUS_MISSING_ITEM;
-        }
-    }
-    else if (!isRegularTargetMap && at->heroicKey2 && !HasItemCount(at->heroicKey2, 1))
-    {
-        miscRequirement = at->heroicKey2;
-        return AREA_LOCKSTATUS_MISSING_ITEM;
-    }
+            switch (fault.type)
+            {
+                case CONDITION_LEVEL:
+                {
+                    if (sWorld.getConfig(CONFIG_BOOL_INSTANCE_IGNORE_LEVEL))
+                        break;
+                    else
+                    {
+                        miscRequirement = fault.param1;
+                        switch (fault.param2)
+                        {
+                            case 0: { return AREA_LOCKSTATUS_LEVEL_NOT_EQUAL; }
+                            case 1: { return AREA_LOCKSTATUS_LEVEL_TOO_HIGH; }
+                            case 2: { return AREA_LOCKSTATUS_LEVEL_TOO_LOW; }
+                        }
+                    }
+                }
 
-    // Quest Requirements
-    if (isRegularTargetMap && at->requiredQuest && !GetQuestRewardStatus(at->requiredQuest))
-    {
-        miscRequirement = at->requiredQuest;
-        return AREA_LOCKSTATUS_QUEST_NOT_COMPLETED;
-    }
-    if (!isRegularTargetMap && at->requiredQuestHeroic && !GetQuestRewardStatus(at->requiredQuestHeroic))
-    {
-        miscRequirement = at->requiredQuestHeroic;
-        return AREA_LOCKSTATUS_QUEST_NOT_COMPLETED;
+                case CONDITION_ITEM:
+                {
+                    miscRequirement = fault.param1;
+                    return AREA_LOCKSTATUS_MISSING_ITEM;
+                }
+
+                case CONDITION_QUESTREWARDED:
+                {
+                    miscRequirement = fault.param1;
+                    return AREA_LOCKSTATUS_QUEST_NOT_COMPLETED;
+                }
+
+                case CONDITION_TEAM:
+                {
+                    miscRequirement = fault.param1;
+                    return AREA_LOCKSTATUS_WRONG_TEAM;
+                }
+
+                case CONDITION_PVP_RANK:
+                {
+                    miscRequirement = fault.param1;
+                    return AREA_LOCKSTATUS_NOT_ALLOWED;
+                }
+
+                default:
+                    return AREA_LOCKSTATUS_UNKNOWN_ERROR;
+            }
+        }
     }
 
     // If the map is not created, assume it is possible to enter it.

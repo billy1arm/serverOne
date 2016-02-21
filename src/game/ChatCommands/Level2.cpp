@@ -271,41 +271,12 @@ bool ChatHandler::HandleTriggerCommand(char* args)
 
     AreaTrigger const* at = sObjectMgr.GetAreaTrigger(atEntry->id);
     if (at)
-        { PSendSysMessage(LANG_TRIGGER_REQ_LEVEL, at->requiredLevel); }
+        { PSendSysMessage(LANG_TRIGGER_CONDITION, at->condition); }
 
     if (uint32 quest_id = sObjectMgr.GetQuestForAreaTrigger(atEntry->id))
     {
         SendSysMessage(LANG_TRIGGER_EXPLORE_QUEST);
         ShowQuestListHelper(quest_id, loc_idx, pl);
-    }
-
-    if (at)
-    {
-        if (at->requiredItem || at->requiredItem2)
-        {
-            SendSysMessage(LANG_TRIGGER_REQ_ITEMS);
-
-            if (at->requiredItem)
-                { ShowItemListHelper(at->requiredItem, loc_idx, pl); }
-            if (at->requiredItem2)
-                { ShowItemListHelper(at->requiredItem2, loc_idx, pl); }
-        }
-
-        if (at->requiredQuest)
-        {
-            SendSysMessage(LANG_TRIGGER_REQ_QUEST);
-            ShowQuestListHelper(at->requiredQuest, loc_idx, pl);
-        }
-
-        if (at->heroicKey || at->heroicKey2)
-        {
-            SendSysMessage(LANG_TRIGGER_REQ_KEYS_HEROIC);
-
-            if (at->heroicKey)
-                ShowItemListHelper(at->heroicKey, loc_idx, pl);
-            if (at->heroicKey2)
-                ShowItemListHelper(at->heroicKey2, loc_idx, pl);
-        }
     }
 
     return true;

@@ -668,7 +668,7 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder* holder)
         if (!mapEntry)
             { lockStatus = AREA_LOCKSTATUS_UNKNOWN_ERROR; }
         else if (pCurrChar->GetSession()->Expansion() < mapEntry->Expansion())
-            lockStatus = AREA_LOCKSTATUS_INSUFFICIENT_EXPANSION;
+            lockStatus = AREA_LOCKSTATUS_EXPANSION_NOT_ALLOWED;
     }
 
     /* This code is run if we can not add the player to the map for some reason */
