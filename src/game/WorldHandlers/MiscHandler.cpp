@@ -830,7 +830,7 @@ void WorldSession::HandleAreaTriggerOpcode(WorldPacket& recv_data)
     }
 
     // teleport player
-    _player->TeleportTo(at->target_mapId, at->target_X, at->target_Y, at->target_Z, at->target_Orientation, TELE_TO_NOT_LEAVE_TRANSPORT, true);
+    _player->TeleportTo(at->target_mapId, at->target_X, at->target_Y, at->target_Z, at->target_Orientation, TELE_TO_NOT_LEAVE_TRANSPORT, at);
 }
 
 void WorldSession::HandleUpdateAccountData(WorldPacket& recv_data)
@@ -903,10 +903,10 @@ void WorldSession::HandleMoveTimeSkippedOpcode(WorldPacket& recv_data)
     uint32 time_dif;
     //uint8 buf[16];
     WorldPacket data(MSG_MOVE_TIME_SKIPPED, 16);
-    
+
     recv_data >> guid;
     recv_data >> time_dif;
-    
+
     // ignore updates not for us
     if (_player == NULL || guid != _player->GetGUID())
     {
